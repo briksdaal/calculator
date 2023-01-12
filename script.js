@@ -8,7 +8,7 @@ const operator = new Operator();
 const display = new Display();
 
 let activeOperand = leftOperand;
-leftOperand.value = 0;
+leftOperand.set(0);
 
 function Operand() {
   this.value = null;
@@ -19,6 +19,7 @@ function Operand() {
   this.pushDigit = (digit) => {
     this.value = this.value * 10 + +digit;
   };
+  this.set = (value) => this.value = value;
   this.lock = () => this.locked = true;
   this.isLocked = () => this.locked;
   this.reset = () => {
@@ -42,36 +43,45 @@ function Operator() {
     this.locked = false;
   };
   this.isEmpty = () => {
-    return this.value === null;
+    return this.value === null || this.value === undefined;
   };
-  this.toString = () => (!this.isEmpty() ? ` ${this.type} ` : "Empty");
+  this.toString = () => (!this.isEmpty() ? `${this.value}` : "Empty");
 }
 
 function Display() {
   this.value = 0;
+  this.minorDisplayValue = "";
   this.firstOperandValue = null;
   this.secondOperandValue = null;
   this.operatorValue = null;
-  this.element = document.querySelector(".display");
+  this.majorDisplay = document.querySelector(".display .major-display");
+  this.minorDisplay = document.querySelector(".display .minor-display");
   this.reset = () => {
     this.value = "";
-    this.element.textContent = this.value;
+    this.majorDisplay.textContent = this.value;
+    this.minorDisplayValue = "";
+    this.minorDisplay.textContent = this.minorDisplayValue;
   };
-  this.set = () => {
+  this.setMajor = () => {
     this.value = activeOperand.toString();
-    this.element.textContent = this.value;
+    this.majorDisplay.textContent = this.value;
   };
+  this.setMinor = () => {
+    this.minorDisplayValue = `${leftOperand.toString()} ${operator.toString()} ${rightOperand.toString()}`;
+  }
 }
 
 function buttonClick(e) {
   const buttonContent = e.target.textContent;
   if (isDigit(buttonContent)) {
     activeOperand.pushDigit(buttonContent);
-    display.set();
-  } else if (isEqualSign(buttonContent)) {
+    display.setMajor();
+  } else if (isEqualSign(buttonContent) && !rightOperand.isEmpty) {
+
 
   } else if (isOperator(buttonContent)) {
     leftOperand.lock();
+    console.log(`content: ${buttonContent}`);
     operator.set(buttonContent);
     activeOperand = rightOperand;
   }
@@ -89,10 +99,11 @@ function runCalc() {
 
 function initCalc() {
   leftOperand.reset();
-  leftOperand.value = 0;
+  leftOperand.set(0);
+  activeOperand = leftOperand;
   rightOperand.reset();
   operator.reset();
-  display.set();
+  display.setMajor();
   // rightOperand.reset();
   buttons.forEach((button) => {
     if (button.textContent !== "off" && button.textContent != "on/c") {
