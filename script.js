@@ -10,34 +10,42 @@ const operator = new Operator();
 const display = new Display();
 
 let activeOperand = leftOperand;
-leftOperand.set(0);
+// leftOperand.set(0);
 
 function Operand() {
-  this.value = null;
+  this.value = "";
   this.continue = false;
-  this.locked = false;
   this.hasDecimalPoint = false;
-  this.numsAfterDecimal = 0;
+  this.numsAfterDecimal = -1;
   this.getValue = () => this.value;
-  this.isEmpty = () => this.value === null;
+  this.isEmpty = () => this.value === "";
   this.pushDigit = (digit) => {
-    if (!this.hasDecimalPoint) {
-      this.value = this.value * 10 + +digit;
-    } else {
-      this.value = this.value + (+digit) / (10 ** ++this.numsAfterDecimal);
+    if (this.numsAfterDecimal >= ROUNDINGDIGITS)
+      return;
+    if (this.value === "0" && !this.hasDecimalPoint) {
+      this.value = "";
     }
+    if (this.hasDecimalPoint)
+      this.numsAfterDecimal++;
+    this.value = this.value + digit;
+    console.log(this.value);
+
+    // if (!this.hasDecimalPoint) {
+
+    //   this.value = this.value * 10 + +digit;
+    // } else {
+    //   this.value = this.value + (+digit) / (10 ** ++this.numsAfterDecimal);
+    // }
   };
   this.set = (value) => (this.value = value);
-  this.lock = () => (this.locked = true);
   this.continue = () => (this.continue = true);
   this.isContinued = () => this.continue;
-  this.isLocked = () => this.locked;
   this.reset = () => {
-    this.value = null;
+    this.value = "";
     this.locked = false;
     this.continue = false;
     this.hasDecimalPoint = false;
-    this.numsAfterDecimal = 0;
+    this.numsAfterDecimal = -1;
   };
   this.toString = () =>
     !this.isEmpty()
@@ -142,7 +150,7 @@ function buttonEvent(buttonContent) {
 
     if (isNaN(leftOperand.getValue())) {
       operator.reset();
-      leftOperand.set(0);
+      leftOperand.set("0");
       activeOperand = leftOperand;
     } else if (isOperator(buttonContent)) {
       operator.set(buttonContent);
@@ -155,12 +163,12 @@ function buttonEvent(buttonContent) {
     }
     rightOperand.reset();
   } else if (isOperator(buttonContent)) {
-    leftOperand.lock();
     operator.set(buttonContent);
     display.setMinor();
     activeOperand = rightOperand;
-  } else if (isDecimalPoint(buttonContent)) {
+  } else if (isDecimalPoint(buttonContent) &&  !activeOperand.hasDecimalPoint){
     activeOperand.hasDecimalPoint = true;
+    activeOperand.pushDigit(buttonContent);
   }
 }
 
@@ -172,7 +180,7 @@ function runCalc() {
 
 function initCalc() {
   leftOperand.reset();
-  leftOperand.set(0);
+  leftOperand.set("0");
   activeOperand = leftOperand;
   rightOperand.reset();
   operator.reset();
@@ -269,6 +277,8 @@ function divide(a, b) {
 }
 
 function operate(a, b, operator) {
+  a = parseFloat(a);
+  b = parseFloat(b);
   let res;
   switch (operator) {
     case 0:
