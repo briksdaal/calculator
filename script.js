@@ -1,3 +1,5 @@
+const ROUNDINGDIGITS = 5;
+
 const onButton = document.querySelector(".button-container.on button");
 const offButton = document.querySelector(".button-container.off button");
 const buttons = document.querySelectorAll(".button-container button");
@@ -40,7 +42,7 @@ function Operand() {
 }
 
 function Operator() {
-  // operator: 0 = "+", 1 = "-"", 2 = "×", 3 = "÷"
+  // operator: 0 = "+", 1 = "-", 2 = "×", 3 = "÷"
   this.value = null;
   this.operatorEnum = null;
   this.locked = false;
@@ -106,9 +108,14 @@ function Display() {
 }
 
 function buttonClick(e) {
-  const buttonContent = e.target.textContent;
+  buttonEvent(e.target.textContent);
+}
+
+function buttonEvent(buttonContent) {
   if (isDigit(buttonContent)) {
-    if (leftOperand.isContinued()) leftOperand.reset();
+    if (activeOperand === leftOperand && leftOperand.isContinued()) {
+      leftOperand.reset();
+    }
     activeOperand.pushDigit(buttonContent);
     display.setMajor(activeOperand);
   } else if (
@@ -125,9 +132,7 @@ function buttonClick(e) {
     leftOperand.set(calculated);
     display.setMajor(leftOperand);
 
-
     rightOperand.reset();
-    
 
     if (isOperator(buttonContent)) {
       operator.set(buttonContent);
@@ -135,8 +140,8 @@ function buttonClick(e) {
     } else {
       operator.reset();
 
-    leftOperand.continue = true;
-    activeOperand = leftOperand;
+      leftOperand.continue = true;
+      activeOperand = leftOperand;
     }
     rightOperand.reset();
   } else if (isOperator(buttonContent)) {
@@ -168,6 +173,30 @@ function initCalc() {
       button.addEventListener("click", buttonClick);
     }
   });
+  window.addEventListener("keydown", keyDownEvent);
+}
+
+function keyDownEvent(key) {
+  key = key.key;
+  if (key === "Enter") {
+    key = "=";
+  } 
+  else if (key === "x" || key === "X" || key ==="*") {
+    key = "×";
+  }  else if (key === "/") {
+    key = "÷";
+  }
+  
+  if (
+    isDigit(key) ||
+    key === "+" ||
+    key === "-" ||
+    key === "×" ||
+    key === "÷" ||
+    key === "="
+  ) {
+    buttonEvent(key);
+  }
 }
 
 function offCalc() {
@@ -223,23 +252,26 @@ function divide(a, b) {
 }
 
 function operate(a, b, operator) {
+  let res;
   switch (operator) {
     case 0:
-      return add(a, b);
+      res = add(a, b);
       break;
     case 1:
-      return subtract(a, b);
+      res = subtract(a, b);
       break;
     case 2:
-      return multiply(a, b);
+      res = multiply(a, b);
       break;
     case 3:
-      return divide(a, b);
+      res = divide(a, b);
       break;
     default:
       return "Unidentified operation";
       break;
   }
+  const roundingFactor = 10 ** ROUNDINGDIGITS;
+  return Math.round(res * roundingFactor) / roundingFactor;
 }
 
 runCalc();
