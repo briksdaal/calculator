@@ -12,6 +12,7 @@ leftOperand.set(0);
 
 function Operand() {
   this.value = null;
+  this.continue = false;
   this.locked = false;
   this.getValue = () => this.value;
   this.isEmpty = () => {
@@ -22,10 +23,13 @@ function Operand() {
   };
   this.set = (value) => (this.value = value);
   this.lock = () => (this.locked = true);
+  this.continue = () => (this.continue = true);
+  this.isContinued = () => this.continue;
   this.isLocked = () => this.locked;
   this.reset = () => {
     this.value = null;
     this.locked = false;
+    this.continue = false;
   };
   this.toString = () =>
     !this.isEmpty()
@@ -36,9 +40,9 @@ function Operand() {
 }
 
 function Operator() {
-  // operator: 0 = "+", 1 = "-"", 2 = "×", 3 ="÷"
+  // operator: 0 = "+", 1 = "-"", 2 = "×", 3 = "÷"
   this.value = null;
-  this.operatorEnum = null;;
+  this.operatorEnum = null;
   this.locked = false;
   this.set = (c) => {
     if (c === "+") {
@@ -85,12 +89,18 @@ function Display() {
   this.setMinor = () => {
     this.minorDisplayValue = "";
     if (!leftOperand.isEmpty())
-    this.minorDisplayValue = this.minorDisplayValue.concat(`${leftOperand.toString()}`);
-     if (!operator.isEmpty())
-     this.minorDisplayValue = this.minorDisplayValue.concat(` ${operator.toString()}`);
-     if (!rightOperand.isEmpty())
-     this.minorDisplayValue = this.minorDisplayValue.concat(` ${rightOperand.toString()}`)
-    
+      this.minorDisplayValue = this.minorDisplayValue.concat(
+        `${leftOperand.toString()}`
+      );
+    if (!operator.isEmpty())
+      this.minorDisplayValue = this.minorDisplayValue.concat(
+        ` ${operator.toString()}`
+      );
+    if (!rightOperand.isEmpty())
+      this.minorDisplayValue = this.minorDisplayValue.concat(
+        ` ${rightOperand.toString()}`
+      );
+
     this.minorDisplayElement.textContent = this.minorDisplayValue;
   };
 }
@@ -98,28 +108,43 @@ function Display() {
 function buttonClick(e) {
   const buttonContent = e.target.textContent;
   if (isDigit(buttonContent)) {
+    if (leftOperand.isContinued()) leftOperand.reset();
     activeOperand.pushDigit(buttonContent);
     display.setMajor(activeOperand);
-  } else if (!rightOperand.isEmpty() && isEqualSign(buttonContent)) {
-    const calculated = operate(leftOperand.getValue(), rightOperand.getValue(), operator.getEnum());
+  } else if (
+    !rightOperand.isEmpty() &&
+    !operator.isEmpty() &&
+    (isEqualSign(buttonContent) || isOperator(buttonContent))
+  ) {
+    const calculated = operate(
+      leftOperand.getValue(),
+      rightOperand.getValue(),
+      operator.getEnum()
+    );
     display.setMinor();
     leftOperand.set(calculated);
     display.setMajor(leftOperand);
-    
-    // activeOperand = leftOperand;
-    operator.reset();
-    rightOperand.reset();
 
+
+    rightOperand.reset();
+    
+
+    if (isOperator(buttonContent)) {
+      operator.set(buttonContent);
+      activeOperand = rightOperand;
+    } else {
+      operator.reset();
+
+    leftOperand.continue = true;
+    activeOperand = leftOperand;
+    }
+    rightOperand.reset();
   } else if (isOperator(buttonContent)) {
     leftOperand.lock();
     operator.set(buttonContent);
     display.setMinor();
     activeOperand = rightOperand;
   }
-
-  // console.log(leftOperand.toString());
-  // console.log(operator.toString());
-  // console.log(rightOperand.toString());
 }
 
 function runCalc() {
@@ -171,11 +196,9 @@ function isOperator(c) {
 }
 
 function allDigits(str) {
-  if (str.charAt(0) === "-")
-    str = str.slice(1)
+  if (str.charAt(0) === "-") str = str.slice(1);
   str = str.split(".");
-  if (str.length > 2)
-    return false;
+  if (str.length > 2) return false;
   str = str.join("");
   return str && Array.from(str.split("")).every((c) => isDigit(c));
 }
