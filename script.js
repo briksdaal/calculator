@@ -70,20 +70,28 @@ function Display() {
   this.firstOperandValue = null;
   this.secondOperandValue = null;
   this.operatorValue = null;
-  this.majorDisplay = document.querySelector(".display .major-display");
-  this.minorDisplay = document.querySelector(".display .minor-display");
+  this.majorDisplayElement = document.querySelector(".display .major-display");
+  this.minorDisplayElement = document.querySelector(".display .minor-display");
   this.reset = () => {
     this.value = "";
-    this.majorDisplay.textContent = this.value;
+    this.majorDisplayElement.textContent = this.value;
     this.minorDisplayValue = "";
-    this.minorDisplay.textContent = this.minorDisplayValue;
+    this.minorDisplayElement.textContent = this.minorDisplayValue;
   };
   this.setMajor = (operand) => {
     this.value = operand.toString();
-    this.majorDisplay.textContent = this.value;
+    this.majorDisplayElement.textContent = this.value;
   };
   this.setMinor = () => {
-    this.minorDisplayValue.textContent = `${leftOperand.toString()} ${operator.toString()} ${rightOperand.toString()}`;
+    this.minorDisplayValue = "";
+    if (!leftOperand.isEmpty())
+    this.minorDisplayValue = this.minorDisplayValue.concat(`${leftOperand.toString()}`);
+     if (!operator.isEmpty())
+     this.minorDisplayValue = this.minorDisplayValue.concat(` ${operator.toString()}`);
+     if (!rightOperand.isEmpty())
+     this.minorDisplayValue = this.minorDisplayValue.concat(` ${rightOperand.toString()}`)
+    
+    this.minorDisplayElement.textContent = this.minorDisplayValue;
   };
 }
 
@@ -92,17 +100,20 @@ function buttonClick(e) {
   if (isDigit(buttonContent)) {
     activeOperand.pushDigit(buttonContent);
     display.setMajor(activeOperand);
-  } else if (isEqualSign(buttonContent) && !rightOperand.isEmpty()) {
+  } else if (!rightOperand.isEmpty() && isEqualSign(buttonContent)) {
     const calculated = operate(leftOperand.getValue(), rightOperand.getValue(), operator.getEnum());
-    console.log(`${leftOperand.getValue()}, ${rightOperand.getValue()}, ${operator.getEnum()}`);
-    console.log(calculated);
     display.setMinor();
     leftOperand.set(calculated);
     display.setMajor(leftOperand);
+    
+    // activeOperand = leftOperand;
+    operator.reset();
+    rightOperand.reset();
 
   } else if (isOperator(buttonContent)) {
     leftOperand.lock();
     operator.set(buttonContent);
+    display.setMinor();
     activeOperand = rightOperand;
   }
 
@@ -123,6 +134,7 @@ function initCalc() {
   activeOperand = leftOperand;
   rightOperand.reset();
   operator.reset();
+  display.reset();
   display.setMajor(activeOperand);
   // rightOperand.reset();
   buttons.forEach((button) => {
@@ -159,6 +171,8 @@ function isOperator(c) {
 }
 
 function allDigits(str) {
+  if (str.charAt(0) === "-")
+    str = str.slice(1)
   str = str.split(".");
   if (str.length > 2)
     return false;
