@@ -1,4 +1,4 @@
-const ROUNDINGDIGITS = 5;
+const ROUNDINGDIGITS = 10;
 
 const onButton = document.querySelector(".button-container.on button");
 const offButton = document.querySelector(".button-container.off button");
@@ -16,12 +16,16 @@ function Operand() {
   this.value = null;
   this.continue = false;
   this.locked = false;
+  this.hasDecimalPoint = false;
+  this.numsAfterDecimal = 0;
   this.getValue = () => this.value;
-  this.isEmpty = () => {
-    return this.value === null;
-  };
+  this.isEmpty = () => this.value === null;
   this.pushDigit = (digit) => {
-    this.value = this.value * 10 + +digit;
+    if (!this.hasDecimalPoint) {
+      this.value = this.value * 10 + +digit;
+    } else {
+      this.value = this.value + (+digit) / (10 ** ++this.numsAfterDecimal);
+    }
   };
   this.set = (value) => (this.value = value);
   this.lock = () => (this.locked = true);
@@ -32,6 +36,8 @@ function Operand() {
     this.value = null;
     this.locked = false;
     this.continue = false;
+    this.hasDecimalPoint = false;
+    this.numsAfterDecimal = 0;
   };
   this.toString = () =>
     !this.isEmpty()
@@ -153,6 +159,8 @@ function buttonEvent(buttonContent) {
     operator.set(buttonContent);
     display.setMinor();
     activeOperand = rightOperand;
+  } else if (isDecimalPoint(buttonContent)) {
+    activeOperand.hasDecimalPoint = true;
   }
 }
 
@@ -196,7 +204,8 @@ function keyDownEvent(key) {
     key === "-" ||
     key === "×" ||
     key === "÷" ||
-    key === "="
+    key === "=" ||
+    key === "."
   ) {
     buttonEvent(key);
   }
@@ -222,6 +231,11 @@ function isDigit(c) {
 function isEqualSign(c) {
   return c === "=";
 }
+
+function isDecimalPoint(c) {
+  return c === ".";
+}
+
 
 function isOperator(c) {
   return c === "+" || c === "-" || c === "×" || c === "÷";
