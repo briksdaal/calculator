@@ -134,7 +134,11 @@ function buttonEvent(buttonContent) {
 
     rightOperand.reset();
 
-    if (isOperator(buttonContent)) {
+    if (isNaN(leftOperand.getValue())) {
+      operator.reset();
+      leftOperand.set(0);
+      activeOperand = leftOperand;
+    } else if (isOperator(buttonContent)) {
       operator.set(buttonContent);
       activeOperand = rightOperand;
     } else {
@@ -180,13 +184,12 @@ function keyDownEvent(key) {
   key = key.key;
   if (key === "Enter") {
     key = "=";
-  } 
-  else if (key === "x" || key === "X" || key ==="*") {
+  } else if (key === "x" || key === "X" || key === "*") {
     key = "×";
-  }  else if (key === "/") {
+  } else if (key === "/") {
     key = "÷";
   }
-  
+
   if (
     isDigit(key) ||
     key === "+" ||
@@ -270,6 +273,7 @@ function operate(a, b, operator) {
       return "Unidentified operation";
       break;
   }
+
   const roundingFactor = 10 ** ROUNDINGDIGITS;
   return Math.round(res * roundingFactor) / roundingFactor;
 }
