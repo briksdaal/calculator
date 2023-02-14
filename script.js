@@ -20,25 +20,24 @@ function Operand() {
   this.getValue = () => this.value;
   this.isEmpty = () => this.value === "";
   this.pushDigit = (digit) => {
-    if (this.numsAfterDecimal >= ROUNDINGDIGITS)
-      return;
+    if (this.numsAfterDecimal >= ROUNDINGDIGITS) return;
     if (this.value === "0" && !this.hasDecimalPoint) {
       this.value = "";
     }
-    if (this.hasDecimalPoint)
-      this.numsAfterDecimal++;
+    if (this.hasDecimalPoint) this.numsAfterDecimal++;
     this.value = this.value + digit;
-    console.log(this.value);
+    // console.log(this.value);
+
+    // old number and not string based memory
 
     // if (!this.hasDecimalPoint) {
-
     //   this.value = this.value * 10 + +digit;
     // } else {
     //   this.value = this.value + (+digit) / (10 ** ++this.numsAfterDecimal);
     // }
   };
   this.set = (value) => (this.value = value);
-  this.continue = () => (this.continue = true);
+  this.flagContinued = () => (this.continue = true);
   this.isContinued = () => this.continue;
   this.reset = () => {
     this.value = "";
@@ -126,13 +125,29 @@ function buttonClick(e) {
 }
 
 function buttonEvent(buttonContent) {
+  // if active operand is a continued left operand (created by previous calculation and not by input), entering a digit or dec point overruns it
+  if ((isDigit(buttonContent) || isDecimalPoint(buttonContent)) && activeOperand === leftOperand && leftOperand.isContinued()) {
+    leftOperand.reset();
+    leftOperand.set("0");
+  }
+  // push digits into active operand and update major display
   if (isDigit(buttonContent)) {
-    if (activeOperand === leftOperand && leftOperand.isContinued()) {
-      leftOperand.reset();
-    }
     activeOperand.pushDigit(buttonContent);
     display.setMajor(activeOperand);
-  } else if (
+  }
+  // process left operand as identity when equal sign is pressed with no operator or right operand
+  else if (
+    !leftOperand.isEmpty() &&
+    operator.isEmpty() &&
+    rightOperand.isEmpty() &&
+    isEqualSign(buttonContent)
+  ) {
+    display.setMinor();
+    display.setMajor(leftOperand);
+    leftOperand.flagContinued();
+  }
+  // calculate if two operands and operator exist, initiated by equal sign or another operator
+  else if (
     !rightOperand.isEmpty() &&
     !operator.isEmpty() &&
     (isEqualSign(buttonContent) || isOperator(buttonContent))
@@ -148,25 +163,34 @@ function buttonEvent(buttonContent) {
 
     rightOperand.reset();
 
+    // if calculation is NaN reset left operand and operator and prepare for new input (display still shows Error)
     if (isNaN(leftOperand.getValue())) {
       operator.reset();
       leftOperand.set("0");
       activeOperand = leftOperand;
-    } else if (isOperator(buttonContent)) {
+    }
+    // if an operator other than the equal sign triggered calculation, set operator for next calculation 
+    else if (isOperator(buttonContent)) {
       operator.set(buttonContent);
       activeOperand = rightOperand;
-    } else {
+    }
+    // if calculation was initiated by the equal sign, mark left operand as "continued", with any new input reseting it
+    else {
       operator.reset();
-
-      leftOperand.continue = true;
+      leftOperand.flagContinued();
       activeOperand = leftOperand;
     }
+
     rightOperand.reset();
-  } else if (isOperator(buttonContent)) {
+  }
+  // process operator and switch activeOperand to right if needed
+  else if (isOperator(buttonContent)) {
     operator.set(buttonContent);
     display.setMinor();
     activeOperand = rightOperand;
-  } else if (isDecimalPoint(buttonContent) &&  !activeOperand.hasDecimalPoint){
+  }
+  // process decimal point a single time only
+  else if (isDecimalPoint(buttonContent) && !activeOperand.hasDecimalPoint) {
     activeOperand.hasDecimalPoint = true;
     activeOperand.pushDigit(buttonContent);
   }
@@ -178,6 +202,7 @@ function runCalc() {
   initCalc();
 }
 
+// function resets calc when first run and every on/c click
 function initCalc() {
   leftOperand.reset();
   leftOperand.set("0");
@@ -196,6 +221,7 @@ function initCalc() {
   window.addEventListener("keydown", keyDownEvent);
 }
 
+// initiates a buttonEvent only for digits and operators (addition, subtraction, multiplication, division, and equal)
 function keyDownEvent(key) {
   key = key.key;
   if (key === "Enter") {
@@ -219,6 +245,7 @@ function keyDownEvent(key) {
   }
 }
 
+// clear calc display and remove all events except for on/c button
 function offCalc() {
   display.reset();
   buttons.forEach((button) => {
@@ -243,7 +270,6 @@ function isEqualSign(c) {
 function isDecimalPoint(c) {
   return c === ".";
 }
-
 
 function isOperator(c) {
   return c === "+" || c === "-" || c === "×" || c === "÷";
