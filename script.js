@@ -20,6 +20,7 @@ function Operand() {
   this.getValue = () => this.value;
   this.isEmpty = () => this.value === "";
   this.pushDigit = (digit) => {
+    if (this.value === "" && digit === ".") this.value = "0";
     if (this.numsAfterDecimal >= ROUNDINGDIGITS) return;
     if (this.value === "0" && !this.hasDecimalPoint) {
       this.value = "";
@@ -66,7 +67,7 @@ function Operator() {
       this.operatorEnum = 1;
     } else if (c === "×") {
       this.operatorEnum = 2;
-    } else {
+    } else if (c === "÷") {
       this.operatorEnum = 3;
     }
     this.value = c;
@@ -125,15 +126,35 @@ function buttonClick(e) {
 }
 
 function buttonEvent(buttonContent) {
+  console.log(buttonContent);
   // if active operand is a continued left operand (created by previous calculation and not by input), entering a digit or dec point overruns it
-  if ((isDigit(buttonContent) || isDecimalPoint(buttonContent)) && activeOperand === leftOperand && leftOperand.isContinued()) {
-    leftOperand.reset();
-    leftOperand.set("0");
+  if (
+    (isDigit(buttonContent) || isDecimalPoint(buttonContent)) &&
+    activeOperand.isContinued()
+  ) {
+    activeOperand.reset();
+    activeOperand.set("0");
   }
   // push digits into active operand and update major display
   if (isDigit(buttonContent)) {
     activeOperand.pushDigit(buttonContent);
     display.setMajor(activeOperand);
+  }
+  // process decimal point a single time only
+  else if (isDecimalPoint(buttonContent) && !activeOperand.hasDecimalPoint) {
+    activeOperand.hasDecimalPoint = true;
+    activeOperand.pushDigit(buttonContent);
+  }
+  // immediately operate on active operand for percentage, negate, and sqrt and flag "continued"
+  else if (isOneOperandOperator(buttonContent)) {
+    let enumOperation;
+    if (buttonContent === "%") enumOperation = 4;
+    else if (buttonContent === "√") enumOperation = 5;
+    else if (buttonContent === "+/-") enumOperation = 6;
+    const calculated = operate(activeOperand, null, enumOperation);
+    activeOperand.set(calculated);
+    display.setMajor(activeOperand);
+    activeOperand.flagContinued();
   }
   // process left operand as identity when equal sign is pressed with no operator or right operand
   else if (
@@ -161,20 +182,18 @@ function buttonEvent(buttonContent) {
     leftOperand.set(calculated);
     display.setMajor(leftOperand);
 
-    rightOperand.reset();
-
     // if calculation is NaN reset left operand and operator and prepare for new input (display still shows Error)
     if (isNaN(leftOperand.getValue())) {
       operator.reset();
       leftOperand.set("0");
       activeOperand = leftOperand;
     }
-    // if an operator other than the equal sign triggered calculation, set operator for next calculation 
+    // if an operator other than the equal sign triggered calculation, set operator and active operand for further input
     else if (isOperator(buttonContent)) {
       operator.set(buttonContent);
       activeOperand = rightOperand;
     }
-    // if calculation was initiated by the equal sign, mark left operand as "continued", with any new input reseting it
+    // if calculation was initiated by the equal sign, flag left operand as "continued", with any new input reseting it
     else {
       operator.reset();
       leftOperand.flagContinued();
@@ -189,10 +208,19 @@ function buttonEvent(buttonContent) {
     display.setMinor();
     activeOperand = rightOperand;
   }
-  // process decimal point a single time only
-  else if (isDecimalPoint(buttonContent) && !activeOperand.hasDecimalPoint) {
-    activeOperand.hasDecimalPoint = true;
-    activeOperand.pushDigit(buttonContent);
+  // joke content for m buttons
+  else if (buttonContent === "mrc") {
+    activeOperand.set("1337");
+    display.setMajor(activeOperand);
+    activeOperand.flagContinued();
+  } else if (buttonContent === "m-") {
+    activeOperand.set("71070");
+    display.setMajor(activeOperand);
+    activeOperand.flagContinued();
+  } else if (buttonContent === "m+") {
+    activeOperand.set("80085");
+    display.setMajor(activeOperand);
+    activeOperand.flagContinued();
   }
 }
 
@@ -275,6 +303,10 @@ function isOperator(c) {
   return c === "+" || c === "-" || c === "×" || c === "÷";
 }
 
+function isOneOperandOperator(c) {
+  return c === "%" || c === "√" || c === "+/-";
+}
+
 function allDigits(str) {
   if (str.charAt(0) === "-") str = str.slice(1);
   str = str.split(".");
@@ -302,9 +334,21 @@ function divide(a, b) {
   return a / b;
 }
 
+function percentage(a) {
+  return a / 100;
+}
+
+function sqrt(a) {
+  return Math.sqrt(a);
+}
+
+function negate(a) {
+  return -a;
+}
+
 function operate(a, b, operator) {
   a = parseFloat(a);
-  b = parseFloat(b);
+  if (b) b = parseFloat(b);
   let res;
   switch (operator) {
     case 0:
@@ -318,6 +362,15 @@ function operate(a, b, operator) {
       break;
     case 3:
       res = divide(a, b);
+      break;
+    case 4:
+      res = percentage(a);
+      break;
+    case 5:
+      res = sqrt(a);
+      break;
+    case 6:
+      res = negate(a);
       break;
     default:
       return "Unidentified operation";
