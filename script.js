@@ -59,7 +59,9 @@ function Operand() {
   this.toString = () =>
     !this.isEmpty()
       ? allDigits(this.value.toString())
-        ? `${this.value}`
+        ? this.value.toString().slice(-1) === "."
+          ? `${this.value.toString().slice(0, -1)}`
+          : `${this.value}`
         : "Error"
       : "Empty";
 }
