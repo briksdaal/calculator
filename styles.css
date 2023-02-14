@@ -1,4 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap");
+
 body {
+  font-family: "Lato", sans-serif;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -19,7 +22,9 @@ a {
 .calc-container {
   flex: 1;
   max-width: 360px;
-  background-color: #b1b0ae;
+  background-color: #bcbbc1;
+  border-radius: 5px;
+  box-shadow: #747474 0 0 2px 0px;
 }
 
 .calc-container-inner {
@@ -32,17 +37,19 @@ a {
 }
 
 .display-container {
-    background-color: #cbcac8;
-    padding: 3px;
-    width: 100%;
-    box-sizing: border-box;
-    border: 3px solid #000;
+  background-color: #9aa794;
+  color: #090707;
+  padding: 3px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 3px solid #000;
+  border-radius: 5px;
 }
 
 .major-display {
   display: flex;
   flex-direction: row-reverse;
-  align-items:center;
+  align-items: center;
   font-size: 24px;
   height: 24px;
 }
@@ -50,15 +57,17 @@ a {
 .minor-display {
   display: flex;
   flex-direction: row-reverse;
-  align-items:center;
+  align-items: center;
   font-size: 16px;
   height: 18px;
+  margin-bottom: 5px;
 }
 
 .mid-container {
   align-self: baseline;
-  background-color: #d70222;
+  background-color: #bc7490;
   padding: 4px;
+  border-radius: 2px;
 }
 
 .buttons-container {
@@ -67,12 +76,32 @@ a {
   gap: 16px;
 }
 
+.button-container {
+  height: 25px;
+}
+
 .button-container button {
-    width: 100%;
-    height: 100%;
+  color: #dee4e6;
+  border: 0;
+  font-weight: 700;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}
+.on button {
+  background-color: #bc7490;
+}
+
+.dark-button button {
+  background-color: #4c495b;
+}
+
+.light-button button {
+  background-color: #888893;
 }
 
 .op-add {
-    grid-column: 5 / 6;
-    grid-row: 4 / 6;
+  height: unset;
+  grid-column: 5 / 6;
+  grid-row: 4 / 6;
 }
