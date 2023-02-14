@@ -37,6 +37,15 @@ function Operand() {
     //   this.value = this.value + (+digit) / (10 ** ++this.numsAfterDecimal);
     // }
   };
+  this.pop = () => {
+    if (!this.isEmpty()) {
+      let popped = this.value.slice(-1);
+      this.value = this.value.slice(0, -1);
+      if (this.hasDecimalPoint) this.numsAfterDecimal--;
+      if (popped === ".") this.hasDecimalPoint = false;
+      if (this.value === "") this.value = "0";
+    }
+  };
   this.set = (value) => (this.value = value);
   this.flagContinued = () => (this.continue = true);
   this.isContinued = () => this.continue;
@@ -126,7 +135,6 @@ function buttonClick(e) {
 }
 
 function buttonEvent(buttonContent) {
-  console.log(buttonContent);
   // if active operand is a continued left operand (created by previous calculation and not by input), entering a digit or dec point overruns it
   if (
     (isDigit(buttonContent) || isDecimalPoint(buttonContent)) &&
@@ -208,6 +216,11 @@ function buttonEvent(buttonContent) {
     display.setMinor();
     activeOperand = rightOperand;
   }
+  // backspace pops last input
+  else if (buttonContent === "Backspace" && !activeOperand.isContinued()) {
+    activeOperand.pop();
+    display.setMajor(activeOperand);
+  }
   // joke content for m buttons
   else if (buttonContent === "mrc") {
     activeOperand.set("1337");
@@ -249,9 +262,10 @@ function initCalc() {
   window.addEventListener("keydown", keyDownEvent);
 }
 
-// initiates a buttonEvent only for digits and operators (addition, subtraction, multiplication, division, and equal)
+// initiates a buttonEvent only for digits, operators (addition, subtraction, multiplication, division, and equal) and backspace
 function keyDownEvent(key) {
   key = key.key;
+
   if (key === "Enter") {
     key = "=";
   } else if (key === "x" || key === "X" || key === "*") {
@@ -267,7 +281,8 @@ function keyDownEvent(key) {
     key === "×" ||
     key === "÷" ||
     key === "=" ||
-    key === "."
+    key === "." ||
+    key === "Backspace"
   ) {
     buttonEvent(key);
   }
