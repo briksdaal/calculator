@@ -10,7 +10,6 @@ const operator = new Operator();
 const display = new Display();
 
 let activeOperand = leftOperand;
-// leftOperand.set(0);
 
 function Operand() {
   this.value = "";
@@ -27,15 +26,6 @@ function Operand() {
     }
     if (this.hasDecimalPoint) this.numsAfterDecimal++;
     this.value = this.value + digit;
-    // console.log(this.value);
-
-    // old number and not string based memory
-
-    // if (!this.hasDecimalPoint) {
-    //   this.value = this.value * 10 + +digit;
-    // } else {
-    //   this.value = this.value + (+digit) / (10 ** ++this.numsAfterDecimal);
-    // }
   };
   this.pop = () => {
     if (!this.isEmpty()) {
@@ -51,7 +41,6 @@ function Operand() {
   this.isContinued = () => this.continue;
   this.reset = () => {
     this.value = "";
-    this.locked = false;
     this.continue = false;
     this.hasDecimalPoint = false;
     this.numsAfterDecimal = -1;
@@ -70,7 +59,6 @@ function Operator() {
   // operator: 0 = "+", 1 = "-", 2 = "×", 3 = "÷"
   this.value = null;
   this.operatorEnum = null;
-  this.locked = false;
   this.set = (c) => {
     if (c === "+") {
       this.operatorEnum = 0;
@@ -85,8 +73,7 @@ function Operator() {
   };
   this.reset = () => {
     this.value = null;
-    this.operator = null;
-    this.locked = false;
+    this.operatorEnum = null;
   };
   this.isEmpty = () => {
     return this.value === null || this.value === undefined;
@@ -98,9 +85,6 @@ function Operator() {
 function Display() {
   this.value = 0;
   this.minorDisplayValue = "";
-  this.firstOperandValue = null;
-  this.secondOperandValue = null;
-  this.operatorValue = null;
   this.majorDisplayElement = document.querySelector(".display .major-display");
   this.minorDisplayElement = document.querySelector(".display .minor-display");
   this.reset = () => {
