@@ -156,7 +156,7 @@ function buttonEvent(buttonContent) {
     activeOperand.pushDigit(buttonContent);
   }
   // immediately operate on active operand for percentage, negate, and sqrt and flag "continued"
-  else if (isOneOperandOperator(buttonContent)) {
+  else if (isOneOperandOperator(buttonContent) && !activeOperand.isEmpty()) {
     let enumOperation;
     if (buttonContent === "%") enumOperation = 4;
     else if (buttonContent === "√") enumOperation = 5;
@@ -191,7 +191,6 @@ function buttonEvent(buttonContent) {
     display.setMinor();
     leftOperand.set(calculated);
     display.setMajor(leftOperand);
-
     // if calculation is NaN reset left operand and operator and prepare for new input (display still shows Error)
     if (isNaN(leftOperand.getValue())) {
       operator.reset();
@@ -203,7 +202,7 @@ function buttonEvent(buttonContent) {
       operator.set(buttonContent);
       activeOperand = rightOperand;
     }
-    // if calculation was initiated by the equal sign, flag left operand as "continued", with any new input reseting it
+    // if calculation was initiated by the equal sign, flag left operand as "continued", with any new digit input reseting it
     else {
       operator.reset();
       leftOperand.flagContinued();
